@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef } from 'react';
 import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import Graphic from '@spectrum-icons/workflow/Graphic';
 import useSimulateController from '../../../hooks/useSimulateController';
@@ -29,14 +29,13 @@ import { getXYZ, getZXZ } from '../../../utils/getEulers';
 const DEG45 = Math.PI / 4;
 
 const Control = ({ controlRef, virtualCam }) => {
-  const [inputValue, setInputValue] = useState({x:null, y:null, z:null})
   const { values } = useFormState();
   const formApi = useFormApi();
   const { updateRobot, setBallRef } = useRobotController();
-  const { endPosition } = useRobotKinematics();
   const { config, dataOpen } = useApp();
+
   const { zeroPosition } = config;
-  
+
   const robotUpdate = () => {
     const { goToX, goToY, goToZ, orientation } = formApi.getFormState().values;
 
@@ -47,136 +46,7 @@ const Control = ({ controlRef, virtualCam }) => {
     updateRobot(goToX, goToY, goToZ, r1, r2, r3);
   };
 
-  const robotUpdateFromArray = () => {
-    const presetRobot = localStorage.getItem('preset-robot');
-    if (presetRobot) {
-      const jsonPresetRobot = JSON.parse(presetRobot);
-      // for(let i=0; i<jsonPresetRobot.length-1; i++){
-      //   const { goToX, goToY, goToZ, orientation, x, y, z } = jsonPresetRobot[i];
-      //   const [r1, r2, r3] = getZXZ(orientation);
-
-      //   let distanceWaypoints = round(jsonPresetRobot[i+1].goToX - jsonPresetRobot[i].goToX, 10);
-      //   console.log(distanceWaypoints);
-      //   while (distanceWaypoints !== 0) {
-      //     // console.log(jsonPresetRobot[i].goToX !== jsonPresetRobot[i+1].goToX)
-      //     // updateRobot(jsonPresetRobot[i].goToX+=0.1, 0, 0, r1, r2, r3);
-      //     console.log(distanceWaypoints)
-      //     distanceWaypoints-=0.1;
-      //     // setBallRef.current([x, y, z, r1, r2, r3]);
-      //   }
-      // }
-
-      jsonPresetRobot.forEach((preset, index) => {
-        // Update the robot
-        setTimeout(function () {
-          // console.log(preset);
-          const { goToX, goToY, goToZ, orientation, x, y, z } = preset;
-          // get rotations from orientation
-          const [r1, r2, r3] = getZXZ(orientation);
-          console.log(preset)
-          while (preset[index].goToX !== preset[index+1].goToX) {
-            console.log(preset[index].goToX !== preset[index+1].goToX)
-            updateRobot(preset[index]+=1, 0, 0, r1, r2, r3);
-            // setBallRef.current([x, y, z, r1, r2, r3]);
-          }
-        }, 100 * index);
-      });
-    }
-  };
-
-  function checkPositiveNegative(arr) {
-    const symbol = [];
-    const negativeValues = [];
-
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i] > 0) {
-        symbol.push(true);
-      } else if (arr[i] < 0) {
-        symbol.push(false);
-      }
-    }
-
-    return symbol;
-  }
-
-  const robotUpdatePresets = () => {
-    const presetRobot = localStorage.getItem('preset-robot');
-    if (presetRobot) {
-      const data = {
-        diffX: null,
-        diffY: null,
-        diffZ: null,
-      };
-
-      const jsonPresetRobot = JSON.parse(presetRobot);
-      for (let i = 0; i < jsonPresetRobot.length - 1; i++) {
-        // console.log(jsonPresetRobot[i+1].goToX - jsonPresetRobot[i].goToX)
-        data.diffX = jsonPresetRobot[i + 1]?.goToX - jsonPresetRobot[i]?.goToX;
-        data.diffY = jsonPresetRobot[i + 1]?.goToY - jsonPresetRobot[i]?.goToY;
-        data.diffZ = jsonPresetRobot[i + 1]?.goToZ - jsonPresetRobot[i]?.goToZ;
-        data.orientationRobot = jsonPresetRobot[i].orientation;
-
-        const maxIteration = Math.max([
-          Math.abs(data.diffX),
-          Math.abs(data.diffY),
-          Math.abs(data.diffZ),
-        ]);
-        const symbol = checkPositiveNegative([data.diffX, data.diffY, data.diffZ]);
-
-        for (let j = 0; j <= maxIteration; j++) {
-          if (jsonPresetRobot[i].goToX !== jsonPresetRobot[i + 1].goToX) {
-            symbol[0] === true ? (jsonPresetRobot[i].goToX += 1) : (jsonPresetRobot[i].goToX -= 1);
-          }
-          if (jsonPresetRobot[i].goToY !== jsonPresetRobot[i + 1].goToY) {
-            symbol[1] === true ? (jsonPresetRobot[i].goToY += 1) : (jsonPresetRobot[i].goToY -= 1);
-          }
-          if (jsonPresetRobot[i].goToZ !== jsonPresetRobot[i + 1].goToZ) {
-            symbol[2] === true ? (jsonPresetRobot[i].goToZ += 1) : (jsonPresetRobot[i].goToZ -= 1);
-          }
-
-          // setTimeout(function () {
-            // get rotations from orientation
-            const [r1, r2, r3] = getZXZ(data.orientationRobot);
-            updateRobot(
-              jsonPresetRobot[i].goToX,
-              jsonPresetRobot[i].goToY,
-              jsonPresetRobot[i].goToZ,
-              r1,
-              r2,
-              r3,
-            );
-            // setBallRef.diffent([x, y, z, r1, r2, r3]);
-          // }, 150 * index);
-        }
-        console.log('preset :', data);
-      }
-    }
-  };
-
-  const savePreset = (value) => {
-    const key = 'preset-robot';
-    const presetRobot = localStorage.getItem(key);
-    // console.log(presetRobot);
-    const newValue = value;
-    newValue.goToX = endPosition.x;
-    newValue.goToY = endPosition.y;
-    newValue.goToZ = endPosition.z;
-
-    setInputValue(newValue);
-
-    if (presetRobot) {
-      // add new value
-      const jsonPresetRobot = JSON.parse(presetRobot);
-      jsonPresetRobot.push(newValue);
-      localStorage.setItem(key, JSON.stringify(jsonPresetRobot));
-    } else {
-      console.log('data not found in LS');
-      localStorage.setItem(key, JSON.stringify([newValue]));
-    }
-  };
-
   const reset = () => {
-    localStorage.removeItem("preset-robot");
     formApi.reset();
     // formApi.setTheseValues({
     //   x: zeroPosition[0],
@@ -240,23 +110,23 @@ const Control = ({ controlRef, virtualCam }) => {
         </ActionButton>
         <NumberInput
           name="goToX"
-          label={`X: ${round(inputValue.x || 0, 1000)}`}
+          label={`X: ${round(values.x, 100)}`}
           step={0.1}
-          initialValue={round(inputValue.x || 0, 1000)}
+          initialValue={40}
           maxWidth="100px"
         />
         <NumberInput
           name="goToY"
-          label={`Y: ${round(inputValue.y || 0, 1000)}`}
+          label={`Y: ${round(values.y, 100)}`}
           step={0.1}
-          initialValue={round(inputValue.y || 0, 1000)}
+          initialValue={0}
           maxWidth="100px"
         />
         <NumberInput
           name="goToZ"
-          label={`Z: ${round(inputValue.z || 0, 1000)}`}
+          label={`Z: ${round(values.z, 100)}`}
           step={0.1}
-          initialValue={round(inputValue.z || 0, 1000)}
+          initialValue={10}
           maxWidth="100px"
         />
         <ActionButton
@@ -264,45 +134,26 @@ const Control = ({ controlRef, virtualCam }) => {
           aria-label="Go"
           type="button"
           onPress={robotUpdate}
-          minWidth="60px"
+          minWidth="50px"
         >
           Go
         </ActionButton>
-        <ActionButton
-          title="Save"
-          aria-label="Save"
-          type="button"
-          onPress={() => savePreset(values)}
-          minWidth="100px"
-        >
-          Save
-        </ActionButton>
-        <ActionButton
-          title="Test"
-          aria-label="Test"
-          type="button"
-          onPress={robotUpdateFromArray}
-          minWidth="100px"
-        >
-          Test
-        </ActionButton>
-        {/* <Switch name="animate" label="Animate" initialValue /> */}
+        <Switch name="animate" label="Animate" initialValue />
       </Flex>
       <br />
       <RadioGroup
-        initialValue="x"
+        initialValue="-z"
         orientation="horizontal"
         name="orientation"
         aria-label="Select Oriantaion"
-        options={[{ label: 'X', value: 'x' }]}
-        // options={[
-        //   { label: 'X', value: 'x' },
-        //   { label: '-X', value: '-x' },
-        //   { label: 'Y', value: 'y' },
-        //   { label: '-Y', value: '-y' },
-        //   { label: 'Z', value: 'z' },
-        //   { label: '-Z', value: '-z' },
-        // ]}
+        options={[
+          { label: 'X', value: 'x' },
+          { label: '-X', value: '-x' },
+          { label: 'Y', value: 'y' },
+          { label: '-Y', value: '-y' },
+          { label: 'Z', value: 'z' },
+          { label: '-Z', value: '-z' },
+        ]}
       />
     </>
   );
@@ -344,7 +195,7 @@ function Info() {
   );
 }
 
-export const Robot = () => {
+export const RobotPreset = () => {
   const { config, orbitEnabled, toggleOrbital, orbitControl, cameraControl, dataOpen } = useApp();
 
   const { values, errors, initialValues } = useFormState();
@@ -406,15 +257,15 @@ export const Robot = () => {
       <div className="robot-info location" style={{ width: '270px' }}>
         <div>
           <strong>X: </strong>
-          {round(endPosition.x)} {units}
+          {round(endPosition.x, 1000)} {units}
         </div>
         <div>
           <strong>Y: </strong>
-          {round(endPosition.y)} {units}
+          {round(endPosition.y, 1000)} {units}
         </div>
         <div>
           <strong>Z: </strong>
-          {round(endPosition.z)} {units}
+          {round(endPosition.z, 1000)} {units}
         </div>
         {/* <div>
           <strong>R1: </strong>

@@ -7,6 +7,10 @@ import fs from 'fs';
 
 const router = express.Router();
 
+router.get("/agus", (req, res)=>{
+  res.send("hallo ini api agus")
+})
+
 router.post('/save/:filename', (req, res) => {
   const { filename } = req.params;
 

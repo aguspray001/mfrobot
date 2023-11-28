@@ -38,6 +38,7 @@ const Actions = ({ allWaypoints, getWaypoints }) => {
 
   const addAction = useCallback(() => {
     const newActionName = formApi.getFormState().values.filename;
+    console.log(newActionName)
     const defaultNewAction = [
       {
         x: 30,
@@ -46,6 +47,7 @@ const Actions = ({ allWaypoints, getWaypoints }) => {
         orientation: '-z',
       },
     ];
+    
     if (!allWaypoints[newActionName]) {
       allWaypoints[newActionName] = defaultNewAction;
       postWaypoints({ payload: defaultNewAction, url: `/waypoints/save/${newActionName}` });

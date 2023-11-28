@@ -204,7 +204,8 @@ const RobotProvider = ({ children }) => {
     const x = res[0][3];
     const y = res[1][3];
     const z = res[2][3];
-
+    
+    //get x,y,z position from joints value
     setEndPosition({ x, y, z });
   };
 

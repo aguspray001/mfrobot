@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Flex, StatusLight, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import Refresh from '@spectrum-icons/workflow/Refresh';
 import Graphic from '@spectrum-icons/workflow/Graphic';
@@ -60,6 +60,17 @@ const Status = ({ status, posText, negText, text }) => {
 
 // Robot Nav -----------------------------
 export const RobotNav = () => {
+  // const [presets, setPresets] = useState(false)
+
+  // const onPresets = (data) => {
+  //   setPresets((preset)=>[...preset, data])
+  //   console.log(data)
+  // }
+
+  // useEffect(() => {
+    
+  // }, [presets])
+  
   // Get controls for nav and robot config
   const { toggleExtra, config, socket, orbitControl, cameraControl } = useApp();
 
@@ -71,8 +82,8 @@ export const RobotNav = () => {
   const { stop: stopSimulation } = useSimulateController();
 
   // Get Kinimatics
-  const { updateForward } = useRobotKinematics();
-
+  // const { updateForward } = useRobotKinematics();
+  const { endPosition, updateForward } = useRobotKinematics();
   // Form api to manipulate form
   const formApi = useFormApi();
 
@@ -277,6 +288,7 @@ export const RobotNav = () => {
     (name) =>
     ({ value }) => {
       updateJoint(name, value);
+      console.log({name, value})
       updateForward();
     };
 
@@ -312,10 +324,16 @@ export const RobotNav = () => {
   // const disabled = !connected;
   const disabled = false;
 
+  //add preset function
+
+
   return (
     <>
       <Flex direction="row" alignItems="center" gap="size-100">
-        <h1>Robot Control</h1>
+        <div>
+          <img src="localhost:3000/static/favicon.ico" alt='logo_pens' width="500" height="600"></img>
+          <h1>Robot Preset GUI - PENS</h1>
+        </div>
         <ActionButton title="Reset Robot" aria-label="Reset Robot" onClick={() => resetRobot()}>
           <Refresh />
         </ActionButton>
@@ -663,6 +681,15 @@ export const RobotNav = () => {
                 <LockOpen />
               </ActionButton>
             </Flex>
+            <div style={{marginTop: "1rem"}}>
+              <Button style={{padding: "0.7rem", fontSize:"1.2rem"}} onPress={()=>{setPresets(endPosition)}}>Add Preset</Button>
+            </div>
+            {/* {
+              presets.map((value, key)=>{
+                console.log(value)
+                return (<p key={key}>{value.x} | {value.y} | {value.z} </p>)
+              })
+            } */}
             <hr />
             <InputSlider
               name="base"

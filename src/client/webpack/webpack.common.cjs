@@ -72,6 +72,7 @@ module.exports = {
       Components: path.resolve(__dirname, '../components/'),
       Utils: path.resolve(__dirname, '../utils/utils'),
       Hooks: path.resolve(__dirname, '../hooks/hooks'),
+      Images: path.resolve(__dirname, '../images/images'),
     },
   },
 };
